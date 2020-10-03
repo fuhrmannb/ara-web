@@ -54,9 +54,8 @@ export default class TaskRow extends Component {
         <tr>
           <td className="pf-c-table__toggle">
             <button
-              className={`pf-c-button pf-m-plain ${
-                isExpanded && "pf-m-expanded"
-              }`}
+              className={`pf-c-button pf-m-plain ${isExpanded && "pf-m-expanded"
+                }`}
               aria-label="Details"
               aria-controls={`expandable task ${task.name}`}
               aria-expanded={isExpanded ? "true" : "false"}
@@ -76,15 +75,13 @@ export default class TaskRow extends Component {
           </td>
         </tr>
         <tr
-          className={`pf-c-table__expandable-row ${
-            isExpanded && "pf-m-expanded"
-          }`}
+          className={`pf-c-table__expandable-row ${isExpanded && "pf-m-expanded"
+            }`}
         >
           <td colspan="5" className="pf-u-p-0">
             <div
-              className={`pf-c-table__expandable-row-content ${
-                isExpanded && "pf-m-expanded"
-              }`}
+              className={`pf-c-table__expandable-row-content ${isExpanded && "pf-m-expanded"
+                }`}
             >
               <table
                 className="pf-c-table pf-m-compact pf-m-no-border-rows"
@@ -110,7 +107,7 @@ export default class TaskRow extends Component {
                         <Status status={result.status}>{result.status}</Status>
                       </td>
                       <td data-label="Host" className="pf-u-text-align-center">
-                        {result.host.name}
+                        {result.host_name}
                       </td>
                       <td
                         data-label="Started"

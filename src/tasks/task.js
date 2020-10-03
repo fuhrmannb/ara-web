@@ -1,5 +1,4 @@
-function _getAveragesFromTask(task) {
-  const results = task.results;
+function _getResultsAverages(results) {
   return results.reduce(
     (acc, result) => {
       acc.statuses[result.status] += 1;
@@ -23,14 +22,15 @@ function _getAveragesFromTask(task) {
     }
   );
 }
-export function extractTasksFromPlays(plays) {
+export function extractTasksFromPlays(hosts, plays, tasks, results) {
   return plays.reduce((acc, play) => {
-    for (const task of play.tasks) {
-      const taskAverages = _getAveragesFromTask(task);
+    for (const task of tasks.filter(t => t.play === play.id)) {
+      const taskResults = results.filter(r => r.task === task.id).map(r => ({ ...r, host_name: hosts.find(h => h.id === r.host).name }));
+      const taskAverages = _getResultsAverages(taskResults);
       acc.push({
         name: task.name,
         action: task.action,
-        results: task.results,
+        results: taskResults,
         task_id: task.id,
         statuses: taskAverages.statuses,
         average_duration: taskAverages.average_duration,

@@ -8,7 +8,7 @@ import {
 import { connect } from "react-redux";
 import { isEmpty } from "lodash";
 import { LoadingPage, Page404 } from "../pages";
-import { getPlaybook } from "./playbooksActions";
+import { getPlaybook, getPlaybookHosts, getPlaybookPlays, getPlaybookTasks, getPlaybookResults } from "./playbooksActions";
 import PlaybookSummary from "./PlaybookSummary";
 import Tasks from "../tasks/Tasks";
 import { extractTasksFromPlays } from "../tasks/task";
@@ -17,18 +17,35 @@ export class PlaybookPage extends Component {
   state = {
     isLoading: true,
     playbook: null,
+    hosts: null,
+    plays: null,
+    tasks: null,
+    results: null,
   };
 
   componentDidMount() {
-    this.props
-      .getPlaybook({ id: this.props.match.params.id })
-      .then((response) => this.setState({ playbook: response.data }))
+    Promise.all([
+      this.props.getPlaybook({ id: this.props.match.params.id }),
+      this.props.getPlaybookHosts({ id: this.props.match.params.id }),
+      this.props.getPlaybookPlays({ id: this.props.match.params.id }),
+      this.props.getPlaybookTasks({ id: this.props.match.params.id }),
+      this.props.getPlaybookResults({ id: this.props.match.params.id }),
+    ])
+      .then(([resPlaybook, resHosts, resPlays, resTasks, resResults]) => {
+        this.setState({
+          playbook: resPlaybook.data,
+          hosts: resHosts.data.results,
+          plays: resPlays.data.results,
+          tasks: resTasks.data.results,
+          results: resResults.data.results,
+        })
+      })
       .catch((error) => console.log(error))
       .then(() => this.setState({ isLoading: false }));
   }
 
   render() {
-    const { isLoading, playbook } = this.state;
+    const { isLoading, playbook, hosts, plays, tasks, results } = this.state;
     const { history } = this.props;
     if (isLoading) {
       return <LoadingPage />;
@@ -57,7 +74,7 @@ export class PlaybookPage extends Component {
               </tr>
             </thead>
             <tbody>
-              {playbook.hosts.map((host) => (
+              {hosts.map((host) => (
                 <tr key={host.id}>
                   <td data-label="Name">{host.name}</td>
                   <td data-label="OK">{host.ok}</td>
@@ -72,7 +89,7 @@ export class PlaybookPage extends Component {
         </Card>
         <Card>
           <CardHeader>Plays</CardHeader>
-          <Tasks tasks={extractTasksFromPlays(playbook.plays)} />
+          <Tasks tasks={extractTasksFromPlays(hosts, plays, tasks, results)} />
         </Card>
       </PageSection>
     );
@@ -82,6 +99,10 @@ export class PlaybookPage extends Component {
 function mapDispatchToProps(dispatch) {
   return {
     getPlaybook: (playbook) => dispatch(getPlaybook(playbook)),
+    getPlaybookHosts: (playbook) => dispatch(getPlaybookHosts(playbook)),
+    getPlaybookPlays: (playbook) => dispatch(getPlaybookPlays(playbook)),
+    getPlaybookTasks: (playbook) => dispatch(getPlaybookTasks(playbook)),
+    getPlaybookResults: (playbook) => dispatch(getPlaybookResults(playbook)),
   };
 }
 
