@@ -1,1 +1,2 @@
 export const FETCH_PLAYBOOKS = "FETCH_PLAYBOOKS";
+export const FETCH_PLAYBOOK = "FETCH_PLAYBOOK";

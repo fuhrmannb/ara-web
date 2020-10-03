@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { isEmpty } from "lodash";
 import {
   Bullseye,
   Button,
@@ -10,13 +9,14 @@ import {
   EmptyStateVariant,
   EmptyStateIcon,
   EmptyStateBody,
+  Pagination,
   PageSection,
   PageSectionVariants,
   Title,
 } from "@patternfly/react-core";
 import { CubesIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
 import { LoadingPage } from "../pages";
-import { getPlaybooks } from "./playbooksActions";
+import { fetchPlaybooks } from "./playbooksActions";
 import PlaybookSummary from "./PlaybookSummary";
 
 export class PlaybooksPage extends Component {
@@ -26,22 +26,37 @@ export class PlaybooksPage extends Component {
     errorMessage: "",
   };
 
-  componentDidMount() {
-    const { getPlaybooks, config } = this.props;
-    getPlaybooks()
-      .catch((error) => {
-        let errorMessage = "";
-        if (error.response) {
-          errorMessage = error.message;
-        } else {
-          errorMessage = `Server located at ${config.apiURL} is unreachable. Check your configuration. Verify that cross-origin requests are not blocked.`;
-        }
-        this.setState({ errorMessage, hasError: true });
-      })
+  refreshPlaybooks(page = 1, perPage = 100) {
+    const { fetchPlaybooks, config } = this.props;
+    fetchPlaybooks(page, perPage)
+      // .catch((error) => {
+      //   let errorMessage = "";
+      //   if (error.response) {
+      //     errorMessage = error.message;
+      //   } else {
+      //     errorMessage = `Server located at ${config.apiURL} is unreachable. Check your configuration. Verify that cross-origin requests are not blocked.`;
+      //   }
+      //   this.setState({ errorMessage, hasError: true });
+      // })
       .then(() => this.setState({ isLoading: false }));
   }
 
+  componentDidMount() {
+    this.refreshPlaybooks()
+  }
+
+  onSetPage(_, pageNumber) {
+    const { playbooks } = this.props;
+    this.refreshPlaybooks(pageNumber, playbooks.perPage)
+  }
+
+  onPerPageSelect(_, perPage) {
+    const { playbooks } = this.props;
+    this.refreshPlaybooks(playbooks.page, perPage)
+  }
+
   render() {
+    console.log(this.state)
     const { playbooks, history } = this.props;
     const { isLoading, hasError, errorMessage } = this.state;
 
@@ -69,7 +84,7 @@ export class PlaybooksPage extends Component {
       );
     }
 
-    if (!isLoading && isEmpty(playbooks)) {
+    if (!isLoading && playbooks.count === 0) {
       return (
         <PageSection variant={PageSectionVariants.default}>
           <Bullseye>
@@ -103,7 +118,15 @@ export class PlaybooksPage extends Component {
 
     return (
       <PageSection variant={PageSectionVariants.default}>
-        {playbooks.map((playbook) => (
+        <Pagination
+          itemCount={this.playbooks.count}
+          perPage={this.playbooks.perPage}
+          page={this.playbooks.page}
+          onSetPage={this.onSetPage}
+          widgetId="pagination-options-menu-top"
+          onPerPageSelect={this.onPerPageSelect}
+        />
+        {playbooks.data.map((playbook) => (
           <PlaybookSummary
             key={playbook.id}
             playbook={playbook}
@@ -118,14 +141,10 @@ export class PlaybooksPage extends Component {
 function mapStateToProps(state) {
   return {
     config: state.config,
-    playbooks: Object.values(state.playbooks),
+    playbooks: state.playbooks,
   };
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    getPlaybooks: () => dispatch(getPlaybooks()),
-  };
-}
+const mapDispatchToProps = { fetchPlaybooks };
 
 export default connect(mapStateToProps, mapDispatchToProps)(PlaybooksPage);
